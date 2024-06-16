@@ -14,6 +14,7 @@ import javax.persistence.Query;
 import javax.persistence.EntityTransaction;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -28,7 +29,10 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         initComponents();
         entityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/medicos.odb");
         entityManager = entityManagerFactory.createEntityManager();
-        CargarEspecialidades();
+        llenarTabla();
+        modifyButton.setEnabled(false);
+        saveButton.setEnabled(true);
+        deleteButton.setEnabled(false);
     }
 
     private void CargarEspecialidades() {
@@ -62,6 +66,49 @@ public class MedicoForm extends javax.swing.JInternalFrame {
 
     }
 
+    public void llenarTabla() {
+        Query query = entityManager.createQuery("SELECT medicoDb FROM Medico medicoDb");
+        List<Medico> result = query.getResultList();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel(); // Use jTable1 instead of table
+        model.setRowCount(0);
+        for (Medico medicoDb : result) {
+            model.addRow(new Object[]{medicoDb.getId(), medicoDb.getNombre(), medicoDb.getCedula(), medicoDb.getEspecialidades()});
+        }
+    }
+      private void modifyButtonMouseClicked(java.awt.event.MouseEvent evt) {                                          
+        long id = Integer.parseInt(campoId.getText());
+        String nombre = campoNombre.getText();
+
+        Especialidad especialidadDb = entityManager.find(Especialidad.class, id);
+        entityManager.getTransaction().begin();
+        especialidadDb.setId(id);
+        especialidadDb.setNombre(nombre);
+        entityManager.getTransaction().commit();
+
+        llenarTabla();
+        campoId.setText("");
+        campoNombre.setText("");
+        saveButton.setEnabled(true);
+        campoId.setEnabled(true);
+    }
+      private void deleteButtonMouseClicked(java.awt.event.MouseEvent evt) {                                          
+        long id = Integer.parseInt(campoId.getText());
+
+        Especialidad especialidadDb = entityManager.find(Especialidad.class, id);
+        entityManager.getTransaction().begin();
+        entityManager.remove(especialidadDb);
+        entityManager.getTransaction().commit();
+
+        llenarTabla();
+        campoId.setText("");
+        campoNombre.setText("");
+
+        campoId.setEnabled(true);
+        saveButton.setEnabled(true);
+        modifyButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+    } 
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -80,9 +127,9 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         comboEspecialidad = new javax.swing.JComboBox<>();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        saveButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        modifyButton = new javax.swing.JButton();
         campoId = new javax.swing.JTextField();
 
         setClosable(true);
@@ -132,28 +179,28 @@ public class MedicoForm extends javax.swing.JInternalFrame {
 
         jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 30, 410, 240));
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_guardar.png"))); // NOI18N
-        jButton1.setToolTipText("GUARDAR"); // NOI18N
-        jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_guardar.png"))); // NOI18N
+        saveButton.setToolTipText("GUARDAR"); // NOI18N
+        saveButton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        saveButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton1MouseClicked(evt);
+                saveButtonMouseClicked(evt);
             }
         });
-        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, 50, 50));
+        jPanel1.add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, 50, 50));
 
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_borrar.png"))); // NOI18N
-        jButton2.setToolTipText("ELIMINAR");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        deleteButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_borrar.png"))); // NOI18N
+        deleteButton.setToolTipText("ELIMINAR");
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                deleteButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 170, 50, 50));
+        jPanel1.add(deleteButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 170, 50, 50));
 
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_actualizar.png"))); // NOI18N
-        jButton3.setToolTipText("ACTUALIZAR");
-        jPanel1.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 170, 50, 50));
+        modifyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_actualizar.png"))); // NOI18N
+        modifyButton.setToolTipText("ACTUALIZAR");
+        jPanel1.add(modifyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 170, 50, 50));
 
         campoId.setEditable(false);
         jPanel1.add(campoId, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
@@ -176,57 +223,57 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_campoNombreActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_deleteButtonActionPerformed
 
-    private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-       // Obtener la especialidad seleccionada
-    Especialidad especialidad = (Especialidad) comboEspecialidad.getSelectedItem();
-    if (especialidad == null || "Seleccione una opción".equals(especialidad.getNombre())) {
-        JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-
-    // Obtener los valores de nombre y cédula
-    String nombre = campoNombre.getText().trim();
-    String cedula = campoCedula.getText().trim();
-
-    // Validar que los campos no estén vacíos
-    if (nombre.isEmpty() || cedula.isEmpty()) {
-        JOptionPane.showMessageDialog(null, "Por favor ingrese todos los campos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-
-    try {
-        // Iniciar una transacción
-        EntityTransaction transaction = entityManager.getTransaction();
-        transaction.begin();
-
-        // Crear el objeto Medico con la especialidad seleccionada
-        Medico medico = new Medico(nombre, cedula);
-        medico.agregarEspecialidad(especialidad); // Usar el método agregarEspecialidad
-
-        // Guardar el objeto Medico en la base de datos
-        entityManager.persist(medico);
-
-        // Confirmar la transacción
-        transaction.commit();
-        JOptionPane.showMessageDialog(null, "Médico guardado satisfactoriamente.");
-
-        // Limpiar los campos después de guardar
-        campoNombre.setText("");
-        campoCedula.setText("");
-
-    } catch (Exception e) {
-        // Manejo de errores
-        if (entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().rollback();
+    private void saveButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_saveButtonMouseClicked
+        // Obtener la especialidad seleccionada
+        Especialidad especialidad = (Especialidad) comboEspecialidad.getSelectedItem();
+        if (especialidad == null || "Seleccione una opción".equals(especialidad.getNombre())) {
+            JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        JOptionPane.showMessageDialog(null, "Error al guardar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    }
 
-    }//GEN-LAST:event_jButton1MouseClicked
+        // Obtener los valores de nombre y cédula
+        String nombre = campoNombre.getText().trim();
+        String cedula = campoCedula.getText().trim();
+
+        // Validar que los campos no estén vacíos
+        if (nombre.isEmpty() || cedula.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Por favor ingrese todos los campos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            // Iniciar una transacción
+            EntityTransaction transaction = entityManager.getTransaction();
+            transaction.begin();
+
+            // Crear el objeto Medico con la especialidad seleccionada
+            Medico medico = new Medico(nombre, cedula);
+            medico.agregarEspecialidad(especialidad); // Usar el método agregarEspecialidad
+
+            // Guardar el objeto Medico en la base de datos
+            entityManager.persist(medico);
+
+            // Confirmar la transacción
+            transaction.commit();
+            JOptionPane.showMessageDialog(null, "Médico guardado satisfactoriamente.");
+
+            // Limpiar los campos después de guardar
+            campoNombre.setText("");
+            campoCedula.setText("");
+
+        } catch (Exception e) {
+            // Manejo de errores
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            JOptionPane.showMessageDialog(null, "Error al guardar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+    }//GEN-LAST:event_saveButtonMouseClicked
 
     private void comboEspecialidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboEspecialidadActionPerformed
         // TODO add your handling code here:
@@ -238,14 +285,14 @@ public class MedicoForm extends javax.swing.JInternalFrame {
     private javax.swing.JTextField campoId;
     private javax.swing.JTextField campoNombre;
     private javax.swing.JComboBox<Object> comboEspecialidad;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
+    private javax.swing.JButton deleteButton;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
+    private javax.swing.JButton modifyButton;
+    private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }

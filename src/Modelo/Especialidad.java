@@ -1,7 +1,5 @@
 package Modelo;
 
-
-import Modelo.Medico;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -12,6 +10,7 @@ import javax.persistence.ManyToMany;
 
 @Entity
 public class Especialidad {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,11 +20,13 @@ public class Especialidad {
     private List<Medico> medicos = new ArrayList<>();
 
     // Constructores, getters y setters
-
-    public Especialidad() {}
+    public Especialidad() {
+        this.medicos = new ArrayList<>(); // Asegurar la inicialización en el constructor
+    }
 
     public Especialidad(String nombre) {
         this.nombre = nombre;
+        this.medicos = new ArrayList<>(); // Asegurar la inicialización en el constructor
     }
 
     public Long getId() {

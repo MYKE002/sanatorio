@@ -64,6 +64,9 @@ public class Medico {
 
     // Método para añadir una especialidad a la lista de especialidades del médico
     public void agregarEspecialidad(Especialidad especialidad) {
+        if (especialidad.getMedicos() == null) {
+            especialidad.setMedicos(new ArrayList<>()); // Inicializar si es nula
+        }
         especialidades.add(especialidad);
         especialidad.getMedicos().add(this);
     }
