@@ -31,20 +31,19 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         CargarEspecialidades();
     }
 
-
     private void CargarEspecialidades() {
         try {
             Especialidad seleccionar = new Especialidad();
             seleccionar.setNombre("Seleccione una opción");
-            comboEspecialidad.addItem(seleccionar.getNombre());
+            comboEspecialidad.addItem(seleccionar);
 
             entityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/especialidad.odb");
             entityManager = entityManagerFactory.createEntityManager();
             Query query = entityManager.createQuery("SELECT especialidadDb FROM Especialidad especialidadDb");
             List<Especialidad> especialidades = query.getResultList();
 
-            for (Especialidad nombreArbitro : especialidades) {
-                comboEspecialidad.addItem(nombreArbitro.getNombre());
+            for (Especialidad especialidad : especialidades) {
+                comboEspecialidad.addItem(especialidad);
             }
 
             comboEspecialidad.setSelectedIndex(0);
@@ -59,6 +58,7 @@ public class MedicoForm extends javax.swing.JInternalFrame {
             }
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -178,9 +178,7 @@ public class MedicoForm extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-        // Verificar si se ha seleccionado una especialidad
-        // Verificar si se ha seleccionado una especialidad
-
+        // Obtener la especialidad seleccionada
         Especialidad especialidad = (Especialidad) comboEspecialidad.getSelectedItem();
         if (especialidad == null || "Seleccione una opción".equals(especialidad.getNombre())) {
             JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
@@ -236,7 +234,7 @@ public class MedicoForm extends javax.swing.JInternalFrame {
     private javax.swing.JTextField campoCedula;
     private javax.swing.JTextField campoId;
     private javax.swing.JTextField campoNombre;
-    private javax.swing.JComboBox<Object> comboEspecialidad;
+    private javax.swing.JComboBox<Especialidad> comboEspecialidad;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
