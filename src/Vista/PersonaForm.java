@@ -379,16 +379,17 @@ public class PersonaForm extends javax.swing.JInternalFrame {
         int id = ((Long) jTable1.getValueAt(selectedRow, 0)).intValue();
         String cedula = (String) jTable1.getValueAt(selectedRow, 1);
         String nombre = (String) jTable1.getValueAt(selectedRow, 2);
-        String seguroNombre = (String) jTable1.getValueAt(selectedRow, 3);
+        Seguro seguro = (Seguro) jTable1.getValueAt(selectedRow, 3); // Obtener el objeto Seguro
 
         campoId.setText(String.valueOf(id));
         campoCedula.setText(cedula);
         campoNombre.setText(nombre);
 
+        // Buscar el seguro seleccionado en el comboPersona y seleccionarlo
         for (int i = 0; i < comboPersona.getItemCount(); i++) {
-            Seguro seguro = (Seguro) comboPersona.getItemAt(i);
-            if (seguro.getNombre().equals(seguroNombre)) {
-                comboPersona.setSelectedItem(seguro);
+            Seguro itemSeguro = (Seguro) comboPersona.getItemAt(i);
+            if (seguro != null && seguro.getId() != null && seguro.getId().equals(itemSeguro.getId())) {
+                comboPersona.setSelectedItem(itemSeguro);
                 break;
             }
         }
