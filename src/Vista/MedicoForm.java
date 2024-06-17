@@ -4,7 +4,6 @@
  */
 package Vista;
 
-import Util.JPAUtil;
 import Modelo.Especialidad;
 import Modelo.Medico;
 import java.util.List;
@@ -28,10 +27,10 @@ public class MedicoForm extends javax.swing.JInternalFrame {
 
     public MedicoForm() {
         initComponents();
-        entityManagerFactory = JPAUtil.getEntityManagerFactory();
+        entityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/medicos.odb");
         entityManager = entityManagerFactory.createEntityManager();
         llenarTabla();
-        CargarEspecialidades();
+        CargarEspecialidades(); // Llamar a este método para cargar las especialidades
         modifyButton.setEnabled(false);
         saveButton.setEnabled(true);
         deleteButton.setEnabled(false);
@@ -41,20 +40,25 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         EntityManager localEntityManager = null;
         EntityManagerFactory localEntityManagerFactory = null;
         try {
-            comboEspecialidad.removeAllItems();
+            comboEspecialidad.removeAllItems(); // Limpiar el combo box antes de cargar las especialidades
+
+            // Crear y agregar un ítem inicial
             Especialidad seleccionar = new Especialidad();
             seleccionar.setNombre("Seleccione una opción");
             comboEspecialidad.addItem(seleccionar);
 
-            localEntityManagerFactory = JPAUtil.getEntityManagerFactory();
+            // Cargar las especialidades desde la base de datos
+            localEntityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/especialidad.odb");
             localEntityManager = localEntityManagerFactory.createEntityManager();
             Query query = localEntityManager.createQuery("SELECT especialidadDb FROM Especialidad especialidadDb");
             List<Especialidad> especialidades = query.getResultList();
 
+            // Agregar las especialidades al combo box
             for (Especialidad especialidad : especialidades) {
                 comboEspecialidad.addItem(especialidad);
             }
 
+            // Seleccionar el primer ítem por defecto
             comboEspecialidad.setSelectedIndex(0);
 
         } catch (Exception e) {
@@ -62,6 +66,9 @@ public class MedicoForm extends javax.swing.JInternalFrame {
         } finally {
             if (localEntityManager != null) {
                 localEntityManager.close();
+            }
+            if (localEntityManagerFactory != null) {
+                localEntityManagerFactory.close();
             }
         }
     }
@@ -264,128 +271,156 @@ public class MedicoForm extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_comboEspecialidadActionPerformed
 
     private void modifyButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_modifyButtonMouseClicked
-        EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager();
+        // Obtener el ID del médico seleccionado para modificar
+        long id;
         try {
-            // Obtener el ID del médico seleccionado para modificar
-            long id = Long.parseLong(campoId.getText());
-
-            // Buscar el médico en la base de datos
-            Medico medico = entityManager.find(Medico.class, id);
-
-            if (medico == null) {
-                JOptionPane.showMessageDialog(null, "No se encontró ningún médico con ese ID.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Obtener la especialidad seleccionada del combo box
-            Especialidad especialidad = (Especialidad) comboEspecialidad.getSelectedItem();
-
-            if (especialidad == null || "Seleccione una opción".equals(especialidad.getNombre())) {
-                JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            // Obtener los valores de nombre y cédula para actualizar
-            String nombre = campoNombre.getText().trim();
-            String cedula = campoCedula.getText().trim();
-
-            if (nombre.isEmpty() || cedula.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Por favor ingrese todos los campos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            try {
-                // Iniciar una transacción
-                EntityTransaction transaction = entityManager.getTransaction();
-                transaction.begin();
-
-                // Actualizar los datos del médico
-                medico.setNombre(nombre);
-                medico.setCedula(cedula);
-                medico.getEspecialidades().clear(); // Limpiar las especialidades actuales
-                medico.agregarEspecialidad(especialidad); // Agregar la nueva especialidad seleccionada
-
-                // Confirmar la transacción
-                entityManager.merge(medico);
-                transaction.commit();
-                JOptionPane.showMessageDialog(null, "Médico actualizado satisfactoriamente.");
-
-                // Limpiar los campos después de actualizar
-                campoId.setText("");
-                campoNombre.setText("");
-                campoCedula.setText("");
-
-                // Habilitar los botones y campos después de actualizar
-                saveButton.setEnabled(true);
-                modifyButton.setEnabled(false);
-                deleteButton.setEnabled(false);
-
-                // Actualizar la tabla
-                llenarTabla();
-
-            } catch (Exception e) {
-                // Manejo de errores
-                if (entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-                JOptionPane.showMessageDialog(null, "Error al actualizar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } finally {
-            entityManager.close();
+            id = Long.parseLong(campoId.getText());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "ID de médico no válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    }//GEN-LAST:event_modifyButtonMouseClicked
 
-    private void deleteButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteButtonMouseClicked
-        // Obtener el ID del médico seleccionado para eliminar
-        long id = Long.parseLong(campoId.getText());
+        // Buscar el médico en la base de datos
+        Medico medico = entityManager.find(Medico.class, id);
 
-        // Iniciar una transacción
-        EntityTransaction transaction = entityManager.getTransaction();
+        if (medico == null) {
+            JOptionPane.showMessageDialog(null, "No se encontró ningún médico con ese ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Obtener la especialidad seleccionada del combo box
+        Especialidad especialidadSeleccionada = (Especialidad) comboEspecialidad.getSelectedItem();
+
+        if (especialidadSeleccionada == null || "Seleccione una opción".equals(especialidadSeleccionada.getNombre())) {
+            JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Buscar la especialidad existente en la base de datos
+        Especialidad especialidad = entityManager.find(Especialidad.class, especialidadSeleccionada.getId());
+
+        if (especialidad == null) {
+            JOptionPane.showMessageDialog(null, "La especialidad seleccionada no existe.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Obtener los valores de nombre y cédula para actualizar
+        String nombre = campoNombre.getText().trim();
+        String cedula = campoCedula.getText().trim();
+
+        if (nombre.isEmpty() || cedula.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Por favor ingrese todos los campos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try {
+            // Iniciar una transacción
+            EntityTransaction transaction = entityManager.getTransaction();
             transaction.begin();
 
-            // Buscar el médico en la base de datos
-            Medico medico = entityManager.find(Medico.class, id);
-
-            if (medico == null) {
-                JOptionPane.showMessageDialog(null, "No se encontró ningún médico con ese ID.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Eliminar el médico de la base de datos
-            entityManager.remove(medico);
+            // Actualizar los datos del médico
+            medico.setNombre(nombre);
+            medico.setCedula(cedula);
+            medico.getEspecialidades().clear(); // Limpiar las especialidades actuales
+            medico.agregarEspecialidad(especialidad); // Agregar la especialidad existente seleccionada
 
             // Confirmar la transacción
+            entityManager.merge(medico);
             transaction.commit();
-            JOptionPane.showMessageDialog(null, "Médico eliminado satisfactoriamente.");
+            JOptionPane.showMessageDialog(null, "Médico actualizado satisfactoriamente.");
 
-            // Limpiar los campos después de eliminar
+            // Limpiar los campos después de actualizar
             campoId.setText("");
             campoNombre.setText("");
             campoCedula.setText("");
-            comboEspecialidad.setSelectedIndex(0);
 
-            // Actualizar la tabla
-            llenarTabla();
-
-            // Habilitar los botones y campos después de eliminar
+            // Habilitar los botones y campos después de actualizar
             saveButton.setEnabled(true);
             modifyButton.setEnabled(false);
             deleteButton.setEnabled(false);
 
+            // Actualizar la tabla
+            llenarTabla();
+
         } catch (Exception e) {
             // Manejo de errores
-            if (transaction.isActive()) {
-                transaction.rollback();
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
             }
-            JOptionPane.showMessageDialog(null, "Error al eliminar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al actualizar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_modifyButtonMouseClicked
+
+    private void deleteButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteButtonMouseClicked
+        //// Obtener el ID del médico seleccionado para modificar
+        long id = Long.parseLong(campoId.getText());
+
+        // Buscar el médico en la base de datos
+        Medico medico = entityManager.find(Medico.class, id);
+
+        if (medico == null) {
+            JOptionPane.showMessageDialog(null, "No se encontró ningún médico con ese ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
+        // Obtener la especialidad seleccionada del combo box
+        Especialidad especialidad = (Especialidad) comboEspecialidad.getSelectedItem();
+
+        if (especialidad == null || "Seleccione una opción".equals(especialidad.getNombre())) {
+            JOptionPane.showMessageDialog(null, "Por favor seleccione una especialidad.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Obtener los valores de nombre y cédula para actualizar
+        String nombre = campoNombre.getText().trim();
+        String cedula = campoCedula.getText().trim();
+
+        if (nombre.isEmpty() || cedula.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Por favor ingrese todos los campos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            // Iniciar una transacción
+            EntityTransaction transaction = entityManager.getTransaction();
+            transaction.begin();
+
+            // Actualizar los datos del médico
+            medico.setNombre(nombre);
+            medico.setCedula(cedula);
+            medico.getEspecialidades().clear(); // Limpiar las especialidades actuales
+            medico.agregarEspecialidad(especialidad); // Agregar la nueva especialidad seleccionada
+
+            // Confirmar la transacción
+            entityManager.merge(medico);
+            transaction.commit();
+            JOptionPane.showMessageDialog(null, "Médico actualizado satisfactoriamente.");
+
+            // Limpiar los campos después de actualizar
+            campoId.setText("");
+            campoNombre.setText("");
+            campoCedula.setText("");
+
+            // Habilitar los botones y campos después de actualizar
+            saveButton.setEnabled(true);
+            modifyButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+
+            // Actualizar la tabla
+            llenarTabla();
+
+        } catch (Exception e) {
+            // Manejo de errores
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            JOptionPane.showMessageDialog(null, "Error al actualizar el médico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_deleteButtonMouseClicked
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        if (evt.getButton() == 1) {
-            int row = jTable1.getSelectedRow();
+        if (evt.getButton() == 1) { // Botón izquierdo del ratón
+        int row = jTable1.getSelectedRow();
+        if (row != -1) {
             // Obtener el ID del médico desde la tabla (debes asegurarte de que la primera columna sea el ID)
             long id = (long) jTable1.getValueAt(row, 0);
 
@@ -404,7 +439,7 @@ public class MedicoForm extends javax.swing.JInternalFrame {
 
             // Seleccionar la especialidad actual del médico en el combo box
             if (!medico.getEspecialidades().isEmpty()) {
-                Especialidad especialidadMedico = medico.getEspecialidades().get(0); // Suponiendo que un médico tiene una sola especialidad
+                Especialidad especialidadMedico = medico.getEspecialidades().iterator().next(); // Suponiendo que un médico tiene una sola especialidad
                 comboEspecialidad.setSelectedItem(especialidadMedico);
             } else {
                 comboEspecialidad.setSelectedIndex(0); // Si no tiene especialidades, seleccionar el primer ítem por defecto
@@ -415,6 +450,7 @@ public class MedicoForm extends javax.swing.JInternalFrame {
             saveButton.setEnabled(false);
             deleteButton.setEnabled(true);
         }
+    }
     }//GEN-LAST:event_jTable1MouseClicked
 
 
@@ -433,4 +469,8 @@ public class MedicoForm extends javax.swing.JInternalFrame {
     private javax.swing.JButton modifyButton;
     private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
+
+    private Object getEntityManagerFactory() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

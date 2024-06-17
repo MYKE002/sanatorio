@@ -1,29 +1,28 @@
 package Modelo;
 
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Paciente extends Persona {
+    @ManyToOne
+    private Seguro seguro;
 
-    @OneToMany(mappedBy = "paciente")
-    private List<Turno> turnos = new ArrayList<>();
+    public Paciente() {
+        super();
+    }
 
-    public Paciente() {}
-
-    public Paciente(String nombre, String cedula) {
+    public Paciente(String nombre, String cedula, Seguro seguro) {
         super(nombre, cedula);
+        this.seguro = seguro;
     }
 
-    // Otros métodos relacionados con la gestión del paciente y turnos
-
-    public List<Turno> getTurnos() {
-        return turnos;
+    // Getters y setters
+    public Seguro getSeguro() {
+        return seguro;
     }
 
-    public void setTurnos(List<Turno> turnos) {
-        this.turnos = turnos;
+    public void setSeguro(Seguro seguro) {
+        this.seguro = seguro;
     }
 }

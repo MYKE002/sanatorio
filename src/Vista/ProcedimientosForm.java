@@ -58,7 +58,7 @@ public class ProcedimientosForm extends javax.swing.JInternalFrame {
         campoCosto = new javax.swing.JTextField();
 
         setClosable(true);
-        setTitle("Especialidad");
+        setTitle("Procedimientos");
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel1.setBackground(new java.awt.Color(0, 255, 204));
