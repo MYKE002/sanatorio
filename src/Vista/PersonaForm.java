@@ -4,17 +4,97 @@
  */
 package Vista;
 
+import Modelo.Paciente;
+import Modelo.Seguro;
+import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.Query;
+import javax.persistence.EntityTransaction;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author kevin
  */
 public class PersonaForm extends javax.swing.JInternalFrame {
 
-    /**
-     * Creates new form PersonaForm
-     */
+    private EntityManagerFactory entityManagerFactory;
+    private EntityManager entityManager;
+
     public PersonaForm() {
         initComponents();
+        entityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/persona.odb");
+        entityManager = entityManagerFactory.createEntityManager();
+        CargarSeguros(); // Asegúrate de llamar a CargarSeguros() aquí
+        llenarTabla();
+        modifyButton.setEnabled(false);
+        saveButton.setEnabled(true);
+        deleteButton.setEnabled(false);
+    }
+
+    private void CargarSeguros() {
+        EntityManager localEntityManager = null;
+        EntityManagerFactory localEntityManagerFactory = null;
+        try {
+            // Obtener el seguro actualmente seleccionado
+            Seguro seguroSeleccionado = (Seguro) comboPersona.getSelectedItem();
+
+            // Limpiar el combo box solo si no hay ningún seguro seleccionado
+            if (seguroSeleccionado == null) {
+                comboPersona.removeAllItems();
+                // Crear y agregar un ítem inicial
+                Seguro seleccionar = new Seguro();
+                seleccionar.setNombre("Seleccione una opción");
+                comboPersona.addItem(seleccionar);
+            }
+
+            // Cargar los seguros desde la base de datos solo si no están ya en el combo box
+            if (comboPersona.getItemCount() <= 1) { // Comprobar si ya se han cargado los seguros
+                localEntityManagerFactory = Persistence.createEntityManagerFactory("C:/sanatorio/seguro.odb");
+                localEntityManager = localEntityManagerFactory.createEntityManager();
+                Query query = localEntityManager.createQuery("SELECT seguroDb FROM Seguro seguroDb");
+                List<Seguro> seguros = query.getResultList();
+
+                // Agregar los seguros al combo box
+                for (Seguro seguro : seguros) {
+                    comboPersona.addItem(seguro);
+                }
+            }
+
+            // Seleccionar el seguro previamente seleccionado si existe
+            if (seguroSeleccionado != null) {
+                comboPersona.setSelectedItem(seguroSeleccionado);
+            } else {
+                // Si no hay seguro seleccionado previamente, seleccionar el ítem inicial
+                comboPersona.setSelectedIndex(0);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error al intentar listar los seguros: " + e);
+            e.printStackTrace(); // Esto te ayudará a ver el error detallado en la consola
+        } finally {
+            if (localEntityManager != null) {
+                localEntityManager.close();
+            }
+            if (localEntityManagerFactory != null) {
+                localEntityManagerFactory.close();
+            }
+        }
+    }
+
+    public void llenarTabla() {
+        Query query = entityManager.createQuery("SELECT pacienteDb FROM Paciente pacienteDb");
+        List<Paciente> result = query.getResultList();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setRowCount(0);
+        for (Paciente pacienteDb : result) {
+            // Obtener el nombre del seguro asociado al paciente
+            String nombreSeguro = pacienteDb.getSeguro().getNombre(); // Asumiendo que 'getSeguro()' devuelve un objeto Seguro y 'getNombre()' devuelve el nombre del seguro
+            model.addRow(new Object[]{pacienteDb.getId(), pacienteDb.getCedula(), pacienteDb.getNombre(), pacienteDb.getSeguro()});
+        }
     }
 
     /**
@@ -26,21 +106,320 @@ public class PersonaForm extends javax.swing.JInternalFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
+        saveButton = new javax.swing.JButton();
+        modifyButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+        jLabel3 = new javax.swing.JLabel();
+        campoCedula = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        campoNombre = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        campoId = new javax.swing.JTextField();
+        comboPersona = new javax.swing.JComboBox<>();
+
+        jPanel1.setAutoscrolls(true);
+
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_guardar.png"))); // NOI18N
+        saveButton.setToolTipText("GUARDAR"); // NOI18N
+        saveButton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        saveButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                saveButtonMouseClicked(evt);
+            }
+        });
+
+        modifyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_actualizar.png"))); // NOI18N
+        modifyButton.setToolTipText("ACTUALIZAR");
+        modifyButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                modifyButtonMouseClicked(evt);
+            }
+        });
+
+        deleteButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_borrar.png"))); // NOI18N
+        deleteButton.setToolTipText("ELIMINAR");
+        deleteButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                deleteButtonMouseClicked(evt);
+            }
+        });
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
+
+        jTable1.setBackground(new java.awt.Color(0, 255, 204));
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "ID", "Numero de Cedula", "Nombre", "Seguro"
+            }
+        ));
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
+
+        jLabel3.setText("Seguro:");
+
+        jLabel4.setText("N° Cedula:");
+
+        campoNombre.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                campoNombreActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Nombre:");
+
+        campoId.setEditable(false);
+
+        comboPersona.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboPersonaActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(31, 31, 31)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(campoCedula, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(comboPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(modifyButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(31, 31, 31)
+                        .addComponent(deleteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 51, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 410, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(25, 25, 25))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(campoId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addComponent(jLabel2)
+                            .addGap(4, 4, 4)
+                            .addComponent(campoNombre, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel4)
+                        .addComponent(jLabel3))
+                    .addGap(0, 509, Short.MAX_VALUE)))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(97, 97, 97)
+                        .addComponent(campoCedula, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(comboPersona, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(deleteButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(modifyButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(23, 23, 23))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(campoId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(16, 16, 16)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel2)
+                        .addComponent(campoNombre, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(16, 16, 16)
+                    .addComponent(jLabel4)
+                    .addGap(22, 22, 22)
+                    .addComponent(jLabel3)
+                    .addGap(0, 123, Short.MAX_VALUE)))
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 394, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 274, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void saveButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_saveButtonMouseClicked
+        String nombre = campoNombre.getText().trim();
+        String cedula = campoCedula.getText().trim();
+        Seguro seguro = (Seguro) comboPersona.getSelectedItem();
+
+        if (nombre.isEmpty() || cedula.isEmpty() || seguro == null || "Seleccione una opción".equals(seguro.getNombre())) {
+            JOptionPane.showMessageDialog(null, "Por favor complete todos los campos y seleccione un seguro.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Paciente paciente = new Paciente();
+        paciente.setNombre(nombre);
+        paciente.setCedula(cedula);
+        paciente.setSeguro(seguro);
+
+        EntityTransaction transaction = entityManager.getTransaction();
+        try {
+            transaction.begin();
+            entityManager.persist(paciente);
+            transaction.commit();
+            JOptionPane.showMessageDialog(null, "Persona guardada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            llenarTabla();
+        } catch (Exception e) {
+            transaction.rollback();
+            JOptionPane.showMessageDialog(null, "Error al guardar persona: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_saveButtonMouseClicked
+
+    private void modifyButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_modifyButtonMouseClicked
+        int id = Integer.parseInt(campoId.getText().trim());
+        Paciente paciente = entityManager.find(Paciente.class, id);
+
+        String nombre = campoNombre.getText().trim();
+        String cedula = campoCedula.getText().trim();
+        Seguro seguro = (Seguro) comboPersona.getSelectedItem();
+
+        if (nombre.isEmpty() || cedula.isEmpty() || seguro == null || "Seleccione una opción".equals(seguro.getNombre())) {
+            JOptionPane.showMessageDialog(null, "Por favor complete todos los campos y seleccione un seguro.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        EntityTransaction transaction = entityManager.getTransaction();
+        try {
+            transaction.begin();
+            paciente.setNombre(nombre);
+            paciente.setCedula(cedula);
+            paciente.setSeguro(seguro);
+            entityManager.merge(paciente);
+            transaction.commit();
+            JOptionPane.showMessageDialog(null, "Persona actualizada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            llenarTabla();
+        } catch (Exception e) {
+            transaction.rollback();
+            JOptionPane.showMessageDialog(null, "Error al actualizar persona: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        modifyButton.setEnabled(false);
+        saveButton.setEnabled(true);
+        deleteButton.setEnabled(false);
+        campoId.setText("");
+        campoNombre.setText("");
+        campoCedula.setText("");
+        comboPersona.setSelectedIndex(0);
+    }//GEN-LAST:event_modifyButtonMouseClicked
+
+    private void deleteButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteButtonMouseClicked
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Por favor seleccione una fila para eliminar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Long id = (Long) jTable1.getValueAt(selectedRow, 0); // Obtener el ID como Long
+        Paciente paciente = entityManager.find(Paciente.class, id);
+
+        EntityTransaction transaction = entityManager.getTransaction();
+        try {
+            transaction.begin();
+            entityManager.remove(paciente);
+            transaction.commit();
+            JOptionPane.showMessageDialog(null, "Persona eliminada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            llenarTabla();
+        } catch (Exception e) {
+            transaction.rollback();
+            JOptionPane.showMessageDialog(null, "Error al eliminar persona: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_deleteButtonMouseClicked
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_deleteButtonActionPerformed
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow == -1) {
+            return;
+        }
+
+        int id = ((Long) jTable1.getValueAt(selectedRow, 0)).intValue();
+        String cedula = (String) jTable1.getValueAt(selectedRow, 1);
+        String nombre = (String) jTable1.getValueAt(selectedRow, 2);
+        String seguroNombre = (String) jTable1.getValueAt(selectedRow, 3);
+
+        campoId.setText(String.valueOf(id));
+        campoCedula.setText(cedula);
+        campoNombre.setText(nombre);
+
+        for (int i = 0; i < comboPersona.getItemCount(); i++) {
+            Seguro seguro = (Seguro) comboPersona.getItemAt(i);
+            if (seguro.getNombre().equals(seguroNombre)) {
+                comboPersona.setSelectedItem(seguro);
+                break;
+            }
+        }
+
+        modifyButton.setEnabled(true);
+        saveButton.setEnabled(false);
+        deleteButton.setEnabled(true);
+    }//GEN-LAST:event_jTable1MouseClicked
+
+    private void campoNombreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_campoNombreActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_campoNombreActionPerformed
+
+    private void comboPersonaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboPersonaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_comboPersonaActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField campoCedula;
+    private javax.swing.JTextField campoId;
+    private javax.swing.JTextField campoNombre;
+    private javax.swing.JComboBox<Object> comboPersona;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
+    private javax.swing.JButton modifyButton;
+    private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }

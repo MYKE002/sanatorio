@@ -50,6 +50,11 @@ public class main extends javax.swing.JFrame {
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_paciente.png"))); // NOI18N
         jButton2.setToolTipText("PACIENTE");
+        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jButton2MouseClicked(evt);
+            }
+        });
         jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 60, 50));
 
         jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/icono_seguro.png"))); // NOI18N
@@ -148,6 +153,13 @@ public class main extends javax.swing.JFrame {
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton2MouseClicked
+        // TODO aSeguroForm seguro = new SeguroForm();
+        PersonaForm persona = new PersonaForm();
+        desktop.add(persona);
+        persona.show();
+    }//GEN-LAST:event_jButton2MouseClicked
 
     /**
      * @param args the command line arguments

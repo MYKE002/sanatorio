@@ -12,14 +12,16 @@ public class Seguro {
     private long id;
     private String nombre;
 
-    // Getters y setters
+    // Constructor vacío
     public Seguro() {
     }
 
+    // Constructor con nombre
     public Seguro(String nombre) {
         this.nombre = nombre;
     }
 
+    // Getters y setters
     public long getId() {
         return id;
     }
@@ -34,5 +36,11 @@ public class Seguro {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    // Sobrescribir el método toString
+    @Override
+    public String toString() {
+        return nombre;
     }
 }
